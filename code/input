@@ -1,0 +1,66 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+class Course {
+    String id, name, day;
+    int start, end, credits;
+
+    public Course(String id, String name, String day, int start, int end, int credits) {
+        this.id = id; this.name = name; this.day = day; this.start = start; this.end = end; this.credits = credits;
+    }
+    public String toString() { return "["+id+"] " + name + " | " + day + " " + start + "-" + end + " (" + credits + "cr)"; }
+}
+
+class Student {
+    String name;
+    List<Course> schedule = new ArrayList<>();
+
+    public Student(String name) { this.name = name; }
+
+    public int getTotalCredits() { return schedule.stream().mapToInt(c -> c.credits).sum(); }
+
+    public boolean hasClash(Course newC) {
+        return schedule.stream().anyMatch(r -> r.day.equalsIgnoreCase(newC.day) && newC.start < r.end && newC.end > r.start);
+    }
+}
+
+public class CourseRegistrationSystem {
+    public static void main(String[] args) {
+        List<Course> catalog = new ArrayList<>();
+        catalog.add(new Course("CS101", "Java Programming", "Monday", 900, 1030, 3));
+        catalog.add(new Course("CS102", "Data Structures", "Monday", 1000, 1130, 4)); // Clashes with CS101
+        catalog.add(new Course("MATH11", "Discrete Math", "Tuesday", 900, 1030, 3));
+
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter Student Name: ");
+        Student student = new Student(sc.nextLine());
+
+        while (true) {
+            System.out.println("\n1. View Catalog\n2. Register Course\n3. View Timetable\n4. Exit");
+            System.out.print("Choice: ");
+            int choice = Integer.parseInt(sc.nextLine());
+
+            if (choice == 1) {
+                catalog.forEach(System.out.println);
+            } else if (choice == 2) {
+                System.out.print("Enter Course ID: ");
+                String targetId = sc.nextLine();
+                Course selected = catalog.stream().filter(c -> c.id.equalsIgnoreCase(targetId)).findFirst().orElse(null);
+
+                if (selected == null) System.out.println("Invalid Course ID.");
+                else if (student.schedule.contains(selected)) System.out.println("Already registered!");
+                else if (student.hasClash(selected)) System.out.println("Timetable conflict detected!");
+                else {
+                    student.schedule.add(selected);
+                    System.out.println("Successfully registered!");
+                }
+            } else if (choice == 3) {
+                System.out.println("\n--- " + student.name + "'s Schedule ---");
+                student.schedule.forEach(System.out.println);
+                System.out.println("Total Credits: " + student.getTotalCredits());
+            } else break;
+        }
+        sc.close();
+    }
+}
